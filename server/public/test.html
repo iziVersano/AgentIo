@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Agent Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+            transition: border-color 0.3s;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .result-container {
+            margin-top: 30px;
+            display: none;
+        }
+        
+        .result-container.show {
+            display: block;
+        }
+        
+        .result {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .error {
+            background: #fee;
+            border-left-color: #e74c3c;
+            color: #c0392b;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .examples {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f4ff;
+            border-radius: 8px;
+        }
+        
+        .examples h3 {
+            font-size: 14px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .example-btn {
+            background: white;
+            color: #667eea;
+            border: 1px solid #667eea;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin: 5px 5px 5px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .example-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Code Agent Tester</h1>
+        <p class="subtitle">Ask the AI code agent anything about programming!</p>
+        
+        <div>
+            <label for="task">Enter your coding task:</label>
+            <textarea id="task" placeholder="e.g., Write a function to reverse a string in Python"></textarea>
+            
+            <div class="examples">
+                <h3>💡 Try these examples:</h3>
+                <button class="example-btn" onclick="setExample('Write a function to reverse a string in Python')">Reverse String</button>
+                <button class="example-btn" onclick="setExample('Explain what is a closure in JavaScript')">JS Closures</button>
+                <button class="example-btn" onclick="setExample('Create a REST API endpoint in Express.js')">Express API</button>
+                <button class="example-btn" onclick="setExample('Write a binary search algorithm in Java')">Binary Search</button>
+            </div>
+            
+            <button id="submitBtn" onclick="runAgent()">🚀 Run Agent</button>
+        </div>
+        
+        <div id="resultContainer" class="result-container">
+            <label>Response:</label>
+            <div id="result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        function setExample(text) {
+            document.getElementById('task').value = text;
+        }
+        
+        async function runAgent() {
+            const task = document.getElementById('task').value.trim();
+            const resultContainer = document.getElementById('resultContainer');
+            const result = document.getElementById('result');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            if (!task) {
+                alert('Please enter a task!');
+                return;
+            }
+            
+            // Show loading
+            resultContainer.classList.add('show');
+            result.className = 'result loading';
+            result.innerHTML = '<div class="spinner"></div>Processing your request...';
+            submitBtn.disabled = true;
+            
+            try {
+                const response = await fetch('http://localhost:3001/agent/run', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ task })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.className = 'result';
+                    result.textContent = data.result;
+                } else {
+                    result.className = 'result error';
+                    result.textContent = 'Error: ' + (data.error || 'Unknown error');
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = 'Error: ' + error.message;
+            } finally {
+                submitBtn.disabled = false;
+            }
+        }
+        
+        // Allow Enter key to submit (with Shift+Enter for new line)
+        document.getElementById('task').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                runAgent();
+            }
+        });
+    </script>
+</body>
+</html>
+
