@@ -11,6 +11,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
 
+app.get("/", (_req, res) => {
+  res.redirect("/test.html");
+});
+
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
 });
